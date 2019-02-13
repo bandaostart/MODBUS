@@ -8,6 +8,9 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QPainter>
+#include <QList>
+#include <QVector>
+#include "showwidget.h"
 
 namespace Ui {
 class MainWindow;
@@ -64,6 +67,10 @@ private:
 
     QLabel   PollStatusBarLabel;
     QLabel   RspStatusBarLabel;
+
+
+    //数据显示窗体
+    QList<ShowWidget *> ListShowWidget;
 
 
 private:

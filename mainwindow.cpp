@@ -49,6 +49,7 @@ void MainWindow::CreatActions()
 
 
 
+
     //连接
     QuickConnectAction = new QAction(QIcon(":/image/connect.png"), tr("Qucik Connect"), this);
     QuickConnectAction->setStatusTip(tr("Connect to modbus using current settings"));
@@ -68,10 +69,12 @@ void MainWindow::CreatActions()
 
 
 
+
     //默认数据
     DefineDataAction = new QAction(QIcon(":/image/definedata.png"), tr("Define Data"), this);
     DefineDataAction->setStatusTip(tr("Select modbus data"));
     connect(DefineDataAction, SIGNAL(triggered()), this, SLOT(Slot_DefineDataActionFun()));
+
 
 
 
@@ -91,6 +94,7 @@ void MainWindow::CreatActions()
     ShowTrafficAction->setCheckable(true);
     ShowDataAction->setChecked(true);
     connect(ShowActionGroup, SIGNAL(triggered(QAction*)), this, SLOT(Slot_ShowActionFun(QAction*)));
+
 
 
 
@@ -142,6 +146,7 @@ void MainWindow::CreatActions()
     DecimalAction = new QAction(QIcon(pix), tr("Decimal"), DataTypeActionGroup);
     DecimalAction->setStatusTip(tr("Decimal"));
     DecimalAction->setCheckable(true);
+    DecimalAction->setChecked(true);
 
     //有符号整形
     pix.fill(QColor(Qt::white));
@@ -260,6 +265,10 @@ void MainWindow::CreatToolBars()
     OperatorTool->addAction(HelpAction);
     OperatorTool->addAction(AboutAction);
 
+    //用于ToolBar分行
+    this->addToolBarBreak();
+
+
     /*数据显示模型先关-------------------------------------------------------------------------------*/
     DataTypeTool = this->addToolBar(tr("Model"));
     DataTypeTool->setAllowedAreas(Qt::TopToolBarArea | Qt::LeftToolBarArea);
@@ -282,12 +291,12 @@ void MainWindow::CreatMainWindow()
     //设置中心体窗体属性
     this->resize(1100, 600);
 
-    //设置中心窗体颜色
-    QPalette p = ui->centralWidget->palette();
-    p.setColor(QPalette::Window, QColor(192, 192, 192));
+//    //设置中心窗体颜色
+//    QPalette p = ui->centralWidget->palette();
+//    p.setColor(QPalette::Window, QColor(160, 160, 160 ));
 
-    ui->centralWidget->setPalette(p);
-    ui->centralWidget->setAutoFillBackground(true);
+//    ui->centralWidget->setPalette(p);
+//    ui->centralWidget->setAutoFillBackground(true);
 
 
     //状态栏设置
@@ -299,6 +308,16 @@ void MainWindow::CreatMainWindow()
     RspStatusBarLabel.setText(tr("Resps: 0"));
     ui->statusBar->addPermanentWidget(&RspStatusBarLabel);
 
+    //创建数据显示窗体
+    ShowWidget *defaultShowWidget = new ShowWidget(this);
+    ListShowWidget.append(defaultShowWidget);
+
+    ui->mdiArea->addSubWindow(ListShowWidget.at(0));
+    //ListShowWidget.at(0)->resize(1000, 300);
+    ListShowWidget.at(0)->show();
+
+
+    //显示版本号
     ui->statusBar->showMessage(tr("Author:bandaostart Version:V1.00"));
 }
 

@@ -12,13 +12,5 @@
         <file>image/save.png</file>
         <file>image/showdata.png</file>
         <file>image/showtraffic.png</file>
-        <file>image/Bin.png</file>
-        <file>image/Dec.png</file>
-        <file>image/Dou.png</file>
-        <file>image/Flo.png</file>
-        <file>image/Hex.png</file>
-        <file>image/Int.png</file>
-        <file>image/SwpDou.png</file>
-        <file>image/SwpFlo.png</file>
     </qresource>
 </RCC>
