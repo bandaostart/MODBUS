@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QPushButton>
+#include <QGridLayout>
 
 class ShowWidget : public QSplitter
 {
@@ -18,19 +19,52 @@ public:
 
 
 public:
-    QWidget   *WidgetTop;
-    QLabel    *AddressNameLabel;
-    QLabel    *AddressTextLabel;
-    QLabel    *LengthNameLabel;
-    QLabel    *LengthTextLabel;
-    QLabel    *IdNameLabel;
-    QLabel    *IdTextLabel;
+    QWidget     *WidgetTop;
+    QLabel      *AddressNameLabel;
+    QLabel      *AddressTextLabel;
+    QLabel      *LengthNameLabel;
+    QLabel      *LengthTextLabel;
+    QLabel      *IdNameLabel;
+    QLabel      *IdTextLabel;
+    QLabel      *TypeNameLabel;
+    QComboBox   *TypeComBox;
+    QLabel      *ResetNameLabel;
+    QPushButton *ResetButton;
 
-
-
+    QGridLayout *WidgetGridLayout;
 
 
     QTextEdit *TextBottom;
 };
 
 #endif // SHOWWIDGET_H
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
