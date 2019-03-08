@@ -10,7 +10,9 @@
 #include <QPainter>
 #include <QList>
 #include <QVector>
-#include "showwidget.h"
+#include <QMdiSubWindow>
+
+#include "showwindow.h"
 
 namespace Ui {
 class MainWindow;
@@ -70,7 +72,7 @@ private:
 
 
     //数据显示窗体
-    QList<ShowWidget *> ListShowWidget;
+    QList<ShowWindow *> ListShowWindow;
 
 
 private:

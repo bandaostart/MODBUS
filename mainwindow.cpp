@@ -291,14 +291,6 @@ void MainWindow::CreatMainWindow()
     //设置中心体窗体属性
     this->resize(1100, 600);
 
-//    //设置中心窗体颜色
-//    QPalette p = ui->centralWidget->palette();
-//    p.setColor(QPalette::Window, QColor(160, 160, 160 ));
-
-//    ui->centralWidget->setPalette(p);
-//    ui->centralWidget->setAutoFillBackground(true);
-
-
     //状态栏设置
     PollStatusBarLabel.setFrameStyle(QFrame::Box | QFrame::Sunken);
     PollStatusBarLabel.setText(tr("Polls: 0"));
@@ -308,13 +300,19 @@ void MainWindow::CreatMainWindow()
     RspStatusBarLabel.setText(tr("Resps: 0"));
     ui->statusBar->addPermanentWidget(&RspStatusBarLabel);
 
-    //创建数据显示窗体
-    ShowWidget *defaultShowWidget = new ShowWidget(this);
-    ListShowWidget.append(defaultShowWidget);
 
-    ui->mdiArea->addSubWindow(ListShowWidget.at(0));
-    //ListShowWidget.at(0)->resize(1000, 300);
-    ListShowWidget.at(0)->show();
+    //创建数据显示窗体
+    ShowWindow *defaultShowWidget = new ShowWindow(this);
+    ListShowWindow.append(defaultShowWidget);
+
+
+    //设置子窗体属性,size改变属性，移动属性，size大小
+    QMdiSubWindow *MidSubWindow;
+    MidSubWindow = ui->mdiArea->addSubWindow(ListShowWindow.at(0));
+    ListShowWindow.at(0)->show();
+    MidSubWindow->setOption(QMdiSubWindow::RubberBandResize);
+    MidSubWindow->setOption(QMdiSubWindow::RubberBandMove);
+    MidSubWindow->resize(1000, 300);
 
 
     //显示版本号
