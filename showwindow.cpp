@@ -2,50 +2,71 @@
 
 ShowWindow::ShowWindow(QWidget *parent) : QMainWindow(parent)
 {
+    Creat_ParaArea();
+
+    Creat_ShowArea();
+
+    Creat_MainArea();
+}
+
+
+
+/*创建参数配置区域------------------------------------------------------------------------------*/
+void ShowWindow::Creat_ParaArea(void)
+{
     QFont Font;
     Font.setBold(true);
     Font.setFamily(QString::fromUtf8("Arial"));
     Font.setWeight(80);
 
-    /*---------------------------------------创建分割器------------------------------------------*/
-    MainSplitter = new QSplitter(this);
-    //设置方向
-    MainSplitter->setOrientation(Qt::Vertical);
-    //设置宽度
-    MainSplitter->setHandleWidth(6);
-    //设置背景色
-    MainSplitter->setStyleSheet("QSplitter::handle { background-color:rgb(215,215,215)}");
-    //设置拉伸属性
-    MainSplitter->setOpaqueResize(false);
+    validator_address  = new QIntValidator(1, 65534, this);
+    validator_length   = new QIntValidator(1, 128, this);
+    validator_modbusid = new QIntValidator(0, 255, this);
 
-
-
-    /*----------------------------------------参数配置界面---------------------------------------*/
-    WidgetTop  = new QWidget(MainSplitter);
+    WidgetTop  = new QWidget(this);
 
     AddressNameLabel = new QLabel(tr("Address:"),          WidgetTop);
     AddressTextEdit  = new QLineEdit(tr("0001"),           WidgetTop);
+    AddressTextEdit->setValidator(validator_address);
+    AddressTextEdit->setMaxLength(5);
+
     AddressNameLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     AddressNameLabel->setGeometry(20, 20, 60, 22);
     AddressTextEdit->setGeometry(90, 20, 100, 22);
     AddressNameLabel->setFont(Font);
     AddressTextEdit->setFont(Font);
 
+
+
+
     LengthNameLabel  = new QLabel(tr("Length:"),           WidgetTop);
     LengthTextEdit   = new QLineEdit(tr("100"),            WidgetTop);
+    LengthTextEdit->setValidator(validator_length);
+    LengthTextEdit->setMaxLength(3);
+
     LengthNameLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     LengthNameLabel->setGeometry(20, 60, 60, 22);
     LengthTextEdit->setGeometry(90, 60, 100, 22);
     LengthNameLabel->setFont(Font);
     LengthTextEdit->setFont(Font);
 
+
+
+
+
     IdNameLabel      = new QLabel(tr("Device id:"),        WidgetTop);
     IdTextEdit       = new QLineEdit(tr("1"),              WidgetTop);
+    IdTextEdit->setValidator(validator_modbusid);
+    IdTextEdit->setMaxLength(3);
+
     IdNameLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     IdNameLabel->setGeometry(200, 20, 120, 22);
     IdTextEdit->setGeometry(330, 20, 170, 22);
     IdNameLabel->setFont(Font);
     IdTextEdit->setFont(Font);
+
+
+
 
     TypeNameLabel    = new QLabel(tr("ModBus Point Type:"), WidgetTop);
     TypeComBox       = new QComboBox(WidgetTop);
@@ -80,130 +101,91 @@ ShowWindow::ShowWindow(QWidget *parent) : QMainWindow(parent)
     ResetButton     = new QPushButton(tr("Reset Ctrs"),  WidgetTop);
     ResetButton->setGeometry(730, 60, 100, 22);
     ResetButton->setFont(Font);
-
     WidgetTop->resize(1000, 100);
 
 
 
-    /*--------------------------------------数据显示界面------------------------------------*/
-    TextBottom = new QTextEdit(MainSplitter);
+    connect(this->AddressTextEdit, SIGNAL(textChanged(QString)), this, SLOT(Reg_AddressChange(QString)));
+    connect(this->LengthTextEdit,  SIGNAL(textChanged(QString)), this, SLOT(Reg_LengthChange(QString)));
+    connect(this->TypeComBox,      SIGNAL(currentIndexChanged(int)), this, SLOT(Reg_TypeChange(int)));
+}
+
+
+
+/*创建数据显示区域------------------------------------------------------------------------------*/
+void ShowWindow::Creat_ShowArea(void)
+{
+    TextBottom = new ShowText(this);
+    TextBottom->resize(1000, 100);
+}
+
+
+
+/*创建主显示区域-------------------------------------------------------------------------------*/
+void ShowWindow::Creat_MainArea(void)
+{
+    MainSplitter = new QSplitter(this);
+
+    //设置方向
+    MainSplitter->setOrientation(Qt::Vertical);
+
+    //设置宽度
+    MainSplitter->setHandleWidth(6);
+
     //设置背景色
-    QPalette p = TextBottom->palette();
-    p.setColor(QPalette::Base, QColor(200, 200, 200));
-    TextBottom->setPalette(p);
-    //设置属性
-    //TextBottom->setReadOnly(true);
-    TextBottom->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    TextBottom->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    TextBottom->setLineWrapMode(QTextEdit::NoWrap);
-    //设置大小
-    TextBottom->resize(1000, 200);
-    //设置拉伸比例
+    MainSplitter->setStyleSheet("QSplitter::handle { background-color:rgb(215,215,215)}");
+
+    //设置拉伸透明属性
+    MainSplitter->setOpaqueResize(false);
+
+    //添加窗体
+    MainSplitter->addWidget(WidgetTop);
+    MainSplitter->addWidget(TextBottom);
     MainSplitter->setStretchFactor(1, 1);
 
 
-    /*--------------------------------------设置分割器为主窗口----------------------------*/
+    //设置分割器为主窗体
     this->setCentralWidget(MainSplitter);
-    this->resize(1000, 300);
-
-
-    //显示数据
-    ShowData(1, 100, 0, 0, false);
 }
 
 
 
-/*数据显示*/
-void ShowWindow::ShowData(uint16_t addr, uint16_t length, uint8_t register_type, uint8_t data_format, bool connect_state)
+
+
+/*槽函数-----------------------------------------------------------------------------------*/
+//更新寄存器地址长度
+void ShowWindow::Reg_AddressChange(QString str)
 {
-    uint16_t        start_addr = 0, temp_addr = 0;
-    uint16_t        i = 0, j = 0, temp_column = 0, temp_row = 0;
-    QString         ConnectStateStr = "** Device NOT CONNECTED **\n";
-    QString         temp_data_str   = "";
-    QTextCharFormat Format;
+    uint16_t num = 0;
 
+    num = str.toInt();
+    num = (num == 0) ? (1) : (num);
 
-    //TextEdit内容清空
-    TextBottom->clear();
-
-
-    //连接状态显示
-    Format = TextBottom->currentCharFormat();
-    Format.setFontPointSize(12);
-    Format.setFontLetterSpacing(110);
-    Format.setFontWeight(QFont::Bold);
-    Format.setFontFamily(QString::fromUtf8("Arial"));
-    Format.setForeground(QColor(255,0,0));
-    TextBottom->mergeCurrentCharFormat(Format);
-    if (!connect_state)
-    {
-       TextBottom->insertPlainText(ConnectStateStr);
-//       QFontMetrics    FontMetrics(Format.font());
-//       connect_str_height = FontMetrics.height();
-    }
-
-
-
-    //数据显示
-    switch (register_type)
-    {
-        case COIL_STATUS:
-            start_addr = 0+addr;
-        break;
-
-        case INPUT_STATUS:
-            start_addr = 10000+addr;
-        break;
-
-        case HOLDING_REGISTER:
-            start_addr = 40000+addr;
-        break;
-
-        case INPUT_REGISTER:
-            start_addr = 30000+addr;
-        break;
-    }
-    Format.setForeground(QColor(0,0,0));
-    TextBottom->mergeCurrentCharFormat(Format);
-
-
-    temp_row = TextBottom->geometry().height()/25;
-    temp_column = length / temp_row;
-    if (length % temp_row != 0)
-    {
-        temp_column++;
-    }
-    for (i=0; i<temp_row; i++)
-    {
-        temp_data_str = "";
-        for (j=0; j<temp_column; j++)
-        {
-            temp_addr = start_addr + temp_row*j+i;
-            if (temp_addr <= length)
-            {
-                temp_data_str += QString("%1").arg(temp_addr, 5, 10, QLatin1Char('0'));
-                temp_data_str += tr(":  <");
-                temp_data_str += QString("%1").arg(0, 1, 10, QLatin1Char('0'));
-                temp_data_str += tr(">    ");
-            }
-        }
-        TextBottom->insertPlainText(temp_data_str+"\n");
-    }
+    TextBottom->SetRegAddress(num);
 }
 
-
-
-
-/*虚函数重写*/
-void ShowWindow::resizeEvent(QResizeEvent *event)
+/*更改寄存器显示长度*/
+void ShowWindow::Reg_LengthChange(QString str)
 {
+    uint16_t num = 0;
 
+    num = str.toInt();
+    num = (num == 0) ? (1) : (num);
 
+    TextBottom->SetRegLength(num);
 }
 
+/*更改寄存器显示类型*/
+void ShowWindow::Reg_TypeChange(int num)
+{
+    TextBottom->SetRegType(num);
+}
 
-
-
+/*更改寄存器显示格式*/
+void ShowWindow::Reg_FormatChange(int num)
+{
+    TextBottom->SetRegDataFormat(num);
+}
 
 
 

@@ -18,7 +18,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //创建主窗体
     CreatMainWindow();
-
 }
 
 MainWindow::~MainWindow()
@@ -395,11 +394,53 @@ void MainWindow::Slot_AboutActionFun()
 }
 
 
-/*数据显示模型相关---------------------------------------------------------------------*/
+/*数据显示类型---------------------------------------------------------------------------------*/
 void MainWindow::Slot_DataTypeActionFun(QAction *action)
 {
+    uint8_t num = 0xFF;
 
 
+    if(action == BinaryAction)
+    {
+        num = 0;
+    }
+
+    if(action == DecimalAction)
+    {
+        num = 1;
+    }
+
+    if(action == IntegerAction)
+    {
+        num = 2;
+    }
+
+    if(action == HexAction)
+    {
+        num = 3;
+    }
+
+    if(action == FloatAction)
+    {
+        num = 4;
+    }
+
+
+    if(action == SwappedFloatAction)
+    {
+        num = 5;
+    }
+
+    if(action == DoubleAction)
+    {
+        num = 6;
+    }
+
+    if(action == SwappedDoubleAction)
+    {
+        num = 7;
+    }
+    qobject_cast<ShowWindow *>(ui->mdiArea->activeSubWindow()->widget())->Reg_FormatChange(num);
 }
 
 
