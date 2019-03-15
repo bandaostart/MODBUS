@@ -9,6 +9,11 @@ ShowText::ShowText(QWidget *parent) : QTextEdit(parent)
     Reg_DataFormat    = DECIMAL_FORMAT;
     Reg_ConnectState  = false;
 
+    for (int i=0; i<256; i++)
+    {
+        Show_Data[i] = i;
+    }
+
 
     //设置背景色
     QPalette p = this->palette();
@@ -70,13 +75,22 @@ void ShowText::SetRegConnectState(bool connect_state)
 /*数据显示-------------------------------------------------------------------------------------------*/
 void ShowText::ShowData(uint16_t addr, uint16_t length, uint8_t register_type, uint8_t data_format, bool connect_state)
 {
-    uint32_t        start_addr = 0, temp_addr = 0;
+    uint32_t        start_addr = 0, temp_addr = 0, data_addr = 0;
     uint16_t        i = 0, j = 0, temp_column = 0, temp_row = 0;
+    uint16_t        max_data_len = 6;
     QString         ConnectStateStr = "** Device NOT CONNECTED **\n";
     QString         temp_data_str   = "", temp_str = "";
-    QTextCharFormat Format;
+    uint16_t        *show_data_u16;
+    int16_t         *show_data_s16;
+    float           *show_data_float;
 
-    int             samp_data = 1;
+
+
+    /*数据处理--------------------------------------------------------------------------------------*/
+    show_data_u16   = (uint16_t *)Show_Data;
+    show_data_s16   = (int16_t *)Show_Data;
+    show_data_float = (float *)Show_Data;
+
 
     /*清空-----------------------------------------------------------------------------------------*/
     this->clear();
@@ -86,6 +100,7 @@ void ShowText::ShowData(uint16_t addr, uint16_t length, uint8_t register_type, u
     /*设置固定行高----------------------------------------------------------------------------------*/
     QTextCursor      textCursor = this->textCursor();
     QTextBlockFormat textBlockFormat;
+    textBlockFormat.setTextIndent(10);
     textBlockFormat.setLineHeight(25, QTextBlockFormat::FixedHeight);         //设置固定行高
     textCursor.setBlockFormat(textBlockFormat);
     this->setTextCursor(textCursor);
@@ -93,10 +108,11 @@ void ShowText::ShowData(uint16_t addr, uint16_t length, uint8_t register_type, u
 
 
     /*设置显示字体----------------------------------------------------------------------------------*/
+    QTextCharFormat Format;
     Format = this->currentCharFormat();                                      //字体格式设置
     Format.setFontPointSize(12);
-    Format.setFontLetterSpacing(110);
-    Format.setFontWeight(QFont::Bold);
+    //Format.setFontLetterSpacing(110);
+    Format.setFontWeight(QFont::Medium);
     Format.setFontFamily(QString::fromUtf8("Arial"));
     Format.setForeground(QColor(255,0,0));
     this->mergeCurrentCharFormat(Format);
@@ -150,76 +166,130 @@ void ShowText::ShowData(uint16_t addr, uint16_t length, uint8_t register_type, u
     temp_column = (length % temp_row) ? (temp_column+1) : (temp_column);
 
 
+    /*查找显示最长的字符串-------------------------------------------------------------------------*/
+    if (data_format >= FLOAT_FORMAT)
+    {
+        QString data_str = 0;
+        max_data_len = 0;
+        for (i=0; i<length/2; i++)
+        {
+            data_str = QString("%1").arg(show_data_float[i], 1, 'f', 4);
+            if (data_str.length() > max_data_len)
+            {
+                max_data_len = data_str.length();
+            }
+        }
+    }
+
+
+
+
     /*显示数据----------------------------------------------------------------------------------*/
     for (i=0; i<temp_row; i++)
     {
         temp_data_str = "";
         for (j=0; j<temp_column; j++)
         {
+            data_addr = temp_row*j+i;
             temp_addr = temp_row*j+i;
             if (temp_addr < length)
             {
                 temp_addr += start_addr;
                 temp_data_str += QString("%1").arg(temp_addr, 6, 10, QLatin1Char('0'));
-                temp_data_str += tr(":  <");
+
                 if ((register_type == COIL_STATUS) || (register_type == INPUT_STATUS))
                 {
-                    temp_data_str += QString("%1").arg(samp_data, 0, 10, QLatin1Char('0'));
+                    temp_data_str += tr(":  <");
+                    temp_data_str += QString("%1").arg('0', 0, 10, QLatin1Char('0'));
+                    temp_data_str += tr(">    ");
                 }
                 else
                 {
                     switch (data_format)
                     {
                         case BINARY_FORMAT:
-                            temp_data_str += QString("%1").arg((uint16_t)samp_data, 16, 2, QLatin1Char('0'));
+                            temp_data_str += tr(":  <");
+                            temp_data_str += QString("%1").arg(show_data_u16[data_addr], 16, 2, QLatin1Char('0'));
+                            temp_data_str += tr(">    ");
                         break;
 
                         case DECIMAL_FORMAT:
-                            temp_data_str += QString("%1").arg((uint16_t)samp_data, 5, 10, QLatin1Char('0'));
+                            temp_data_str += tr(":  <");
+                            temp_data_str += QString("%1").arg(show_data_u16[data_addr], 5, 10, QLatin1Char('0'));
+                            temp_data_str += tr(">    ");
                         break;
 
                         case INTEGER_FORMAT:
-                            if (i%2 == 0)
-                            {
-                                samp_data = 10;
-                            }
-                            else
-                            {
-                                samp_data = 1000;
-                            }
-                           temp_data_str += QString("%1").arg(samp_data, 5, 10, QLatin1Char(' '));
+                           temp_data_str += tr(":  <");
+                           temp_data_str += QString("%1").arg(show_data_s16[data_addr], 5, 10, QLatin1Char(0x00));
+                           temp_data_str += tr(">    ");
                         break;
 
                         case HEX_FORMAT:
-                            temp_data_str += QString("%1").arg((uint16_t)samp_data, 4, 16, QLatin1Char('0')).toUpper();
+                            temp_data_str += tr(":  <");
+                            temp_data_str += QString("%1").arg(show_data_u16[data_addr], 4, 16, QLatin1Char('0')).toUpper();
                             temp_data_str += 'H';
+                            temp_data_str += tr(">    ");
                         break;
 
                         case FLOAT_FORMAT:
+                            temp_data_str += tr(":  ");
                             if (i%2 == 0)
                             {
-
+                                temp_data_str += QString("%1").arg(show_data_float[data_addr/2], max_data_len, 'f', 4, QLatin1Char(0x00));
                             }
                             else
                             {
-                                temp_data_str += QString("%1").arg((float)samp_data, 1, 'f', 4);
+                                temp_data_str += QString("%1").arg(".", max_data_len, QLatin1Char(0x00));
+
                             }
+                            temp_data_str += tr("    ");
                         break;
 
                         case SWAPPED_FLOAT_FORMAT:
-                            temp_data_str += QString("%1").arg((float)samp_data, 1, 'f', 4);
+                            temp_data_str += tr(":  ");
+                            if (i%2 == 0)
+                            {
+                                temp_data_str += QString("%1").arg(show_data_float[data_addr/2], max_data_len, 'f', 4, QLatin1Char(0x00));
+                            }
+                            else
+                            {
+                                temp_data_str += QString("%1").arg(".", max_data_len, QLatin1Char(0x00));
+
+                            }
+                            temp_data_str += tr("    ");
                         break;
 
                         case DOUBLE_FORMAT:
-                            temp_data_str += QString("%1").arg((float)samp_data, 1, 'f', 4);
+                            temp_data_str += tr(":  ");
+                            if (i%2 == 0)
+                            {
+                                temp_data_str += QString("%1").arg(show_data_float[data_addr/2], max_data_len, 'f', 4, QLatin1Char(0x00));
+                            }
+                            else
+                            {
+                                temp_data_str += QString("%1").arg(".", max_data_len, QLatin1Char(0x00));
+
+                            }
+                            temp_data_str += tr("    ");
                         break;
 
                         case SWAPPED_DOUBLE_FORMAT:
-                            temp_data_str += QString("%1").arg((float)samp_data, 1, 'f', 4);
+                            temp_data_str += tr(":  ");
+                            if (i%2 == 0)
+                            {
+                                temp_data_str += QString("%1").arg(show_data_float[data_addr/2], max_data_len, 'f', 4, QLatin1Char(0x00));
+                            }
+                            else
+                            {
+                                temp_data_str += QString("%1").arg(".", max_data_len, QLatin1Char(0x00));
+
+                            }
+                            temp_data_str += tr("    ");
                         break;
                     }
                 }
-                temp_data_str += tr(">    ");
+
 
                 if ((i == 0) && (j == 0))
                 {
@@ -227,6 +297,7 @@ void ShowText::ShowData(uint16_t addr, uint16_t length, uint8_t register_type, u
                 }
             }
         }
+
         this->insertPlainText(temp_data_str);
         if (i != (temp_row-1))
         {

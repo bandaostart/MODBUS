@@ -5,6 +5,7 @@
 #include <QTextEdit>
 #include <QMouseEvent>
 #include <QMessageBox>
+#include <QDebug>
 
 #define  COIL_STATUS                    0
 #define  INPUT_STATUS                   1
@@ -38,6 +39,9 @@ public:
     uint16_t Column_Num;
     uint16_t Str_Height;
     uint16_t Str_Width;
+
+    uint16_t Show_Data[256];
+
 
 
 public:
